@@ -12,6 +12,7 @@
             <th>Amount</th>
             <th>Date</th>
             <th>Description</th>
+            <th>Category</th>
         </tr>
     </thead>
     <tbody>
@@ -22,6 +23,22 @@
             <td>${{ transaction.amount }}</td>
             <td>{{ transaction.date }}</td>
             <td>{{ transaction.description }}</td>
+            <td>
+                <form method="post" action="{% url 'transaction:update-category' transaction.pk %}">
+                    {% csrf_token %}
+                    <select name="category" class="form-select form-select-sm" onchange="this.form.submit()">
+                        <option value="" {% if not transaction.category %}selected{% endif %}>
+                            -- No Category --
+                        </option>
+                        {% for cat in categories %}
+                        {{cat}}
+                        <option value="{{ cat.pk }}" {% if transaction.category == cat %}selected{% endif %}>
+                            {{ cat }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </form>
+            </td>
         </tr>
         {% empty %}
         <tr>
@@ -29,5 +46,4 @@
         </tr>
         {% endfor %}
     </tbody>
-</table>
-{% endblock %}
+</table>{% endblock %}
