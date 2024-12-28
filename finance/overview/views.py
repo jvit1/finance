@@ -1,3 +1,8 @@
 from django.shortcuts import render
+from transaction.models import Transaction
 
-# Create your views here.
+
+def home(request):
+    context = {
+    }
+    return render(request, 'templates/base.html', context)
