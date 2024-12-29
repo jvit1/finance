@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from transaction.models import Transaction, Category
+from .forms import TransactionUpload
 
 
 def home(request):
@@ -11,6 +12,8 @@ def home(request):
     }
     return render(request, 'templates/transaction/transactions.html', context)
 
+
+
 def update_transaction_category(request, transaction_id):
     transaction = get_object_or_404(Transaction, pk=transaction_id)
     if request.method == 'POST':
@@ -20,4 +23,14 @@ def update_transaction_category(request, transaction_id):
         transaction.category = category
         transaction.save()
         return HttpResponse(status=204)
-            
+    
+
+def upload_transactions(request):
+    if request.method == "POST":
+        form = TransactionUpload(request.POST, request.FILES)
+        if form.is_valid():
+            transactions = form.process_csv()
+    else:
+        form = TransactionUpload()
+
+    return render(request, "templates/transaction/upload_transactions.html", {"form":form})
