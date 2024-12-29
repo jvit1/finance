@@ -29,7 +29,7 @@ def upload_transactions(request):
     if request.method == "POST":
         form = TransactionUpload(request.POST, request.FILES)
         if form.is_valid():
-            transactions = form.process_csv()
+            transactions = form.save_transactions()
     else:
         form = TransactionUpload()
 

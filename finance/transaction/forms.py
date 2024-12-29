@@ -100,8 +100,24 @@ class TransactionUpload(forms.Form):
             transactions.append({
                 "date": date_val,
                 "description": description_val,
-                "amount": amount_val,
+                "amount": -amount_val if self.cleaned_data['account'].invert_transactions else amount_val,
             })
 
-        print(transactions)
+        return transactions
+    
+    def save_transactions(self):
+        transaction_data = self.process_csv()
+        account = self.cleaned_data['account']
+
+        to_create = []
+        for data in transaction_data:
+            to_create.append(
+                Transaction(
+                    account=account,
+                    date = data['date'],
+                    description = data['description'],
+                    amount = data['amount']
+                )
+            )
+        Transaction.objects.bulk_create(to_create)
         
