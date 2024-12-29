@@ -1,0 +1,39 @@
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{% extends "templates\base.html" %}
+{% block title %}Categorize Spending{% endblock %}
+{% block content %}
+<h3>Transactions by Account</h3>
+    <canvas id="myChart" width="400" height="200"></canvas>
+    
+    <script>
+        // In a Django template, you'd typically pass the labels and data via context:
+        const labels = JSON.parse('{{ labels|safe }}');
+        const dataValues = JSON.parse('{{ data|safe }}');
+
+        // Initialize the chart
+        const ctx = document.getElementById('myChart').getContext('2d');
+        const myChart = new Chart(ctx, {
+            type: 'bar', // or 'line', 'pie', etc.
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Total Amount',
+                    data: dataValues,
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                // Add any additional Chart.js options here
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+
+{% endblock %}

@@ -13,7 +13,6 @@ def home(request):
     return render(request, 'templates/transaction/transactions.html', context)
 
 
-
 def update_transaction_category(request, transaction_id):
     transaction = get_object_or_404(Transaction, pk=transaction_id)
     if request.method == 'POST':
