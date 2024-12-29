@@ -4,6 +4,7 @@ from .models import Transaction
 import csv
 import re
 from datetime import datetime
+from decimal import Decimal
 
 class TransactionUpload(forms.Form):
     account = forms.ModelChoiceField(
@@ -109,15 +110,22 @@ class TransactionUpload(forms.Form):
         transaction_data = self.process_csv()
         account = self.cleaned_data['account']
 
+        existing_transactions = set(
+            Transaction.objects.filter(account=account)
+            .values_list('date', 'account_id', 'amount')
+        )
+
         to_create = []
         for data in transaction_data:
-            to_create.append(
-                Transaction(
-                    account=account,
-                    date = data['date'],
-                    description = data['description'],
-                    amount = data['amount']
+            key = (data['date'], account.pk, Decimal(str(data['amount'])))
+            if key not in existing_transactions:
+                to_create.append(
+                    Transaction(
+                        account=account,
+                        date = data['date'],
+                        description = data['description'],
+                        amount = data['amount']
+                    )
                 )
-            )
         Transaction.objects.bulk_create(to_create)
         
