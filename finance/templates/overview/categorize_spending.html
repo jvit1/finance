@@ -1,39 +1,113 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels"></script>
 
 {% extends "templates\base.html" %}
 {% block title %}Categorize Spending{% endblock %}
 {% block content %}
-<h3>Transactions by Account</h3>
-    <canvas id="myChart" width="400" height="200"></canvas>
-    
-    <script>
-        // In a Django template, you'd typically pass the labels and data via context:
-        const labels = JSON.parse('{{ labels|safe }}');
-        const dataValues = JSON.parse('{{ data|safe }}');
+{% include "templates/overview_button_group.html" %}
+<h3>Spend by Category</h3>
+<div class="row">
+    <div class="col-12 col-md-6 mb-4">
+        <table class="table table-sm">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Total Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in txn %}
+                    <tr>
+                        <td>{{ i.category__name }}</td>
+                        <td>${{ i.total_amount|floatformat:2 }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center">No transactions available.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <!-- Pie Chart Column -->
+    <div class="col-12 col-md-6">
+        <div class="chart-container" style="position: relative; height: 50vh;">
+            <canvas id="myChart"></canvas>
+        </div>
+    </div>
+</div>
 
-        // Initialize the chart
-        const ctx = document.getElementById('myChart').getContext('2d');
-        const myChart = new Chart(ctx, {
-            type: 'bar', // or 'line', 'pie', etc.
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Total Amount',
-                    data: dataValues,
-                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                // Add any additional Chart.js options here
-                scales: {
-                    y: {
-                        beginAtZero: true
+<!-- Chart Initialization Script -->
+<script>
+    // Register the DataLabels plugin
+    Chart.register(ChartDataLabels);
+
+    // Retrieve labels and data from the context
+    const labels = JSON.parse('{{ labels|safe }}');
+    const dataValues = JSON.parse('{{ data|safe }}');
+
+    // Calculate total for dynamic percentage display if needed
+    const total = dataValues.reduce((acc, val) => acc + val, 0);
+
+    // Function to generate random colors
+    function randomColor(alpha = 0.7) {
+        const r = Math.floor(Math.random() * 256);
+        const g = Math.floor(Math.random() * 256);
+        const b = Math.floor(Math.random() * 256);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    // Generate background and border colors
+    const backgroundColors = dataValues.map(() => randomColor());
+    const borderColors = backgroundColors.map(color => color.replace(/0\.\d+\)$/, '1)'));
+
+    // Initialize the pie chart
+    const ctx = document.getElementById('myChart').getContext('2d');
+    const myChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Total Amount',
+                data: dataValues,
+                backgroundColor: backgroundColors,
+                borderColor: borderColors,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                // DataLabels Plugin Configuration
+                datalabels: {
+                    anchor: 'center',
+                    align: 'center',
+                    formatter: (value, context) => {
+                        const percentage = ((value / total) * 100).toFixed(2);
+                        return `$${value} (${percentage}%)`;
+                    },
+                    color: '#000',
+                    font: {
+                        size: 14,
+                        weight: 'bold'
+                    },
+                },
+                legend: {
+                    position: 'bottom',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed || 0;
+                            const percentage = ((value / total) * 100).toFixed(2);
+                            return `${label}: $${value} (${percentage}%)`;
+                        }
                     }
                 }
             }
-        });
-    </script>
-
+        }
+    });
+</script>
 {% endblock %}
